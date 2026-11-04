@@ -88,7 +88,7 @@ begin
   Result := not WizardIsTaskSelected('startup');
 end;
 
-function RuntimeInRegistry(Root: HKEY): Boolean;
+function RuntimeInRegistry(Root: Integer): Boolean;
 var
   Version: String;
   Dot: Integer;
