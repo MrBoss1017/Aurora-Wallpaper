@@ -1,8 +1,8 @@
 # Validation record and Windows release matrix
 
-Recorded for this source delivery on 2026-11-03.
+Validation is split between portable tests, automated Windows packaging checks, and hands-on desktop testing. The [Windows workflow](https://github.com/MrBoss1017/Aurora-Wallpaper/actions/workflows/build.yml) is the source of truth for each revision. A release is published only when its policy and Windows jobs succeed.
 
-## Executed here
+## Checks and evidence
 
 | Check | Result |
 | --- | --- |
@@ -13,16 +13,16 @@ Recorded for this source delivery on 2026-11-03.
 | `node --check` on sample JavaScript | Passed |
 | JSON, manifest XML, local C++ include paths, local documentation links | Passed |
 | Chromium sample smoke test | Not executed: Playwright was installed but no Chromium executable was present |
-| Windows C++ compile/link | **Not executed**: no Windows SDK/MSVC toolchain |
-| Native app/Explorer/GPU/WebView2/libVLC tests | **Not executed**: no interactive Windows desktop |
-| GitHub Actions workflow | Supplied, **not run** as part of this delivery |
-| Offline installer script and Windows install/startup/uninstall job | Implemented, **not compiled or executed**; requires an authorized Windows runner |
+| Windows C++ compile/link | Required by the Windows CI job before packaging |
+| Real Explorer/GPU rendering and multi-monitor matrix | **Not yet executed** on physical Windows desktops |
+| GitHub Actions workflow | Active; inspect the run linked to the release commit |
+| Offline installer compilation and install/startup/uninstall test | Required by CI; automatic publication is blocked on failure |
 
 The 517 policy checks comprise 500 deterministic randomized comparisons against an independent pixel-grid oracle and 17 focused checks for negative monitor origins, fullscreen monitor separation, overlapping/snapped windows, empty bounds, pause reasons, per-display mute, battery Eco behavior, refresh-rate caps, and coverage thresholds.
 
-Source inspection and portable tests do not establish Windows compilation success or native integration correctness. This source package is not labeled production-tested.
+A successful CI run establishes compilation and packaging success for that exact revision. It does not establish native rendering correctness on every user desktop. Releases remain previews until the physical desktop matrix is complete.
 
-Installer update: `Build-Installer.ps1` validates the staged files and Microsoft's runtime signature, compiles an Inno Setup wizard, and emits a checksum/receipt. `Test-Installer.ps1` installs into a temporary folder, runs `--smoke-test`, and uninstalls. The application's smoke mode checks Qt loading, WebView2 availability, bundled libVLC exports, bundled HLSL compilation, and basic hidden UI startup using a test data location. These new Windows checks are prepared but have **not yet run**. Full desktop rendering still needs the matrix below, even after they pass.
+Installer update: `Build-Installer.ps1` validates the staged files and Microsoft's runtime signature, compiles an Inno Setup wizard, and emits a checksum/receipt. `Test-Installer.ps1` installs into a temporary folder, runs `--smoke-test`, and uninstalls. The application's smoke mode checks Qt loading, WebView2 availability, bundled libVLC exports, bundled HLSL compilation, and basic hidden UI startup using a test data location. The test removes build-machine Qt paths before startup so it checks the installed payload. Full desktop rendering still needs the matrix below, even after they pass.
 
 ## Required Windows acceptance matrix
 
@@ -66,4 +66,4 @@ Measure idle, video, web, and shader separately at 1080p/4K and one/two displays
 
 Use Windows Performance Recorder/Analyzer, Task Manager GPU-engine views, and an appropriate graphics debugger/profiler. Set concrete hardware-specific budgets from measurements; none have been measured in this environment.
 
-For a distributable release, complete the matrix, test dependency upgrades, include required third-party notices/source offers as appropriate, sign binaries, and validate the package on a clean machine. These steps are release work, not checks claimed completed in this source delivery.
+Before declaring a stable production release, complete the physical desktop matrix, profile representative hardware, test dependency upgrades, sign the app and installer, and validate the package on a clean consumer Windows installation. Preview installers include vendor notices and matching source downloads but are currently unsigned.

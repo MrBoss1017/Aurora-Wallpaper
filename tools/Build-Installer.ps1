@@ -12,7 +12,7 @@ $outputDir = Join-Path $projectRoot 'installer-output'
 New-Item -ItemType Directory -Force $prereqDir, $outputDir | Out-Null
 
 $required = @('bin/AuroraWallpaper.exe', 'bin/Qt6Core.dll', 'bin/Qt6Gui.dll',
-    'bin/Qt6Widgets.dll', 'bin/Qt6Concurrent.dll', 'bin/vcruntime140.dll',
+    'bin/Qt6Widgets.dll', 'bin/vcruntime140.dll',
     'bin/msvcp140.dll', 'bin/vlc/libvlc.dll', 'bin/vlc/libvlccore.dll',
     'bin/samples/aurora/aurora.hlsl', 'bin/samples/web-orbit/index.html', 'START-HERE.txt')
 foreach ($relative in $required) {
@@ -53,6 +53,10 @@ $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
 "$hash  $(Split-Path $setup -Leaf)" | Set-Content -Encoding ascii "$setup.sha256"
 $receipt = [ordered]@{
     applicationVersion = $version
+    sourceCommit = $env:GITHUB_SHA
+    qtVersion = '6.8.3'
+    vlcVersion = '3.0.23'
+    webViewSdkVersion = '1.0.4314.35'
     installer = (Split-Path $setup -Leaf)
     installerSha256 = $hash
     webViewRuntimeVersion = (Get-Item $runtimeFile).VersionInfo.ProductVersion

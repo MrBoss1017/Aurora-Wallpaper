@@ -4,11 +4,11 @@
 
 End users should receive `AuroraWallpaper-Setup-0.1.1-x64.exe`, run the wizard, and launch Aurora from the Start menu. They do not need the developer prerequisites or commands below. The installer bundles the staged Qt/libVLC/MSVC runtime files and Microsoft's offline WebView2 installer, creates shortcuts, optionally starts Aurora at sign-in, and registers a Windows uninstaller.
 
-**Current status: installer code and Windows automation are prepared; the actual setup executable has not yet been compiled.** See [INSTALLER.md](INSTALLER.md). The source ZIP is not a setup program.
+Tested installer builds are published on [GitHub Releases](https://github.com/MrBoss1017/Aurora-Wallpaper/releases). See [INSTALLER.md](INSTALLER.md) for the pipeline. Download the setup EXE to install; GitHub’s source archives are for developers.
 
 ## Prerequisites
 
-Use an x64 Windows machine with Visual Studio 2022's **Desktop development with C++** workload, the MSVC v143 toolset, a Windows SDK, and CMake 3.25+. Install a Qt 6.8+ **MSVC 2022 64-bit** kit. This project uses Qt Core/Gui/Widgets/Concurrent, not Qt WebEngine.
+Use an x64 Windows machine with Visual Studio 2022's **Desktop development with C++** workload, the MSVC v143 toolset, a Windows SDK, CMake 3.25+, and the NuGet CLI on PATH. Install a Qt 6.8+ **MSVC 2022 64-bit** kit. This project uses Qt Core/Gui/Widgets/Concurrent, not Qt WebEngine.
 
 Install the [WebView2 Evergreen Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) if absent. It is separate from the C++ SDK. Do not disable Chromium's sandbox or run Aurora as administrator.
 
@@ -51,7 +51,7 @@ This CPack command stages a portable runtime archive. To produce the setup wizar
 | Dependency | Build input | Acquisition |
 | --- | --- | --- |
 | Qt | 6.8+ MSVC x64 kit | Your Qt installation; CI uses 6.8.3 for a reproducible minimum-version build |
-| WebView2 SDK | 1.0.4314.35 | Official NuGet package; package SHA-512 compared with NuGet's digest |
+| WebView2 SDK | 1.0.4314.35 | Official NuGet package; author/repository signatures verified with the NuGet CLI |
 | VLC/libVLC | 3.0.23 x64 | Official VideoLAN ZIP; SHA-256 is pinned in the setup script |
 | D3D11, DXGI, DComp, D3DCompiler | Windows SDK/system | Linked Windows import libraries |
 | WebView2 Runtime | Evergreen | Install/maintain through Microsoft's runtime distribution |
