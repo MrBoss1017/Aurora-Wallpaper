@@ -1,0 +1,17 @@
+Aurora Wallpaper
+
+Open Aurora Wallpaper from the Start menu or desktop shortcut.
+Choose a wallpaper, choose a display, and click Apply wallpaper.
+
+Closing or minimizing the window keeps Aurora running in the system tray.
+Use the tray icon to reopen the library, pause, mute, or exit.
+
+Use Import wallpaper to add videos, a local web folder, or an HLSL shader.
+Sound is muted by default. Mouse interaction can be enabled in settings.
+
+To remove Aurora, use Windows Settings > Apps > Installed apps.
+Uninstalling keeps your imported wallpapers and preferences.
+
+The setup program includes the application's required runtime files. No
+Visual Studio, Qt installation, PowerShell commands, or compilation is
+required on the computer where Aurora is installed.

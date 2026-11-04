@@ -1,0 +1,30 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "windows-release",
+      "displayName": "Windows x64 · MSVC 2022",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "$env{AURORA_QT_ROOT}",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/dist"
+      }
+    },
+    {
+      "name": "portable-tests",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/tests",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-release", "configurePreset": "windows-release", "configuration": "Release" },
+    { "name": "portable-tests", "configurePreset": "portable-tests" }
+  ],
+  "testPresets": [
+    { "name": "windows-release", "configurePreset": "windows-release", "configuration": "Release", "output": { "outputOnFailure": true } },
+    { "name": "portable-tests", "configurePreset": "portable-tests", "output": { "outputOnFailure": true } }
+  ]
+}

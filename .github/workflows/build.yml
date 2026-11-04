@@ -1,0 +1,99 @@
+name: Build Windows installer
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', '.github/ISSUE_TEMPLATE/**']
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset portable-tests
+      - run: cmake --build --preset portable-tests
+      - run: ctest --preset portable-tests
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          arch: win64_msvc2022_64
+          cache: true
+      - name: Fetch pinned dependencies
+        shell: pwsh
+        run: ./tools/Setup-Dependencies.ps1
+      - name: Compile, test, and stage
+        shell: pwsh
+        run: ./tools/Build.ps1 -QtRoot "$env:QT_ROOT_DIR"
+      - name: Find installer compiler
+        id: inno
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6/ISCC.exe'
+          if (!(Test-Path $iscc) -or [version](Get-Item $iscc).VersionInfo.FileVersion -lt [version]'6.3.0') {
+            choco upgrade innosetup --yes --no-progress --limit-output
+            if ($LASTEXITCODE) { throw 'Could not provision Inno Setup on the build runner.' }
+          }
+          if (!(Test-Path $iscc)) { throw 'Inno Setup compiler is unavailable.' }
+          "compiler=$iscc" >> $env:GITHUB_OUTPUT
+      - name: Package the offline setup wizard
+        shell: pwsh
+        run: ./tools/Build-Installer.ps1 -IsccPath '${{ steps.inno.outputs.compiler }}'
+      - name: Test install, application startup, and uninstall
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem installer-output/AuroraWallpaper-Setup-*-x64.exe | Select-Object -First 1
+          if (!$setup) { throw 'Installer artifact missing.' }
+          ./tools/Test-Installer.ps1 -Installer $setup.FullName
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AuroraWallpaper-Setup-windows-x64
+          path: |
+            installer-output/AuroraWallpaper-Setup-*-x64.exe
+            installer-output/*.sha256
+            installer-output/build-receipt.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Keep installer test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuroraWallpaper-installer-test-logs
+          path: installer-output/test-logs/
+          if-no-files-found: ignore
+
+  release:
+    name: Publish Windows preview
+    needs: [policy, windows]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: AuroraWallpaper-Setup-windows-x64
+          path: release-files
+      - name: Publish tested installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -n 's/.*project(AuroraWallpaper VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          test -n "$version"
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" release-files/* --clobber
+            gh release edit "$tag" --notes-file docs/RELEASE_NOTES.md
+          else
+            gh release create "$tag" release-files/* --target "$GITHUB_SHA" --title "Aurora Wallpaper $version — Windows preview" --notes-file docs/RELEASE_NOTES.md --prerelease
+          fi

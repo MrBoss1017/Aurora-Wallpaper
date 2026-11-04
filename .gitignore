@@ -1,0 +1,10 @@
+/build/
+/dist/
+/third_party/
+/.vs/
+*.user
+*.pdb
+*.dmp
+/node_modules/
+/package-lock.json
+/installer-output/

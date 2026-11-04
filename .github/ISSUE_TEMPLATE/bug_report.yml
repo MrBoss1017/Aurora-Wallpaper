@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a problem with Aurora Wallpaper.
+title: "[Bug] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include the steps to reproduce and what you expected.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Aurora version
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label: Windows and graphics setup
+      description: Windows version, GPU, monitor resolutions and scaling, and wallpaper type.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Remove personal file paths and private content before sharing.
