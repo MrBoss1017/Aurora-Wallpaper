@@ -34,6 +34,9 @@ jobs:
       - name: Compile, test, and stage
         shell: pwsh
         run: ./tools/Build.ps1 -QtRoot "$env:QT_ROOT_DIR"
+      - name: Stage vendor licenses and source archives
+        shell: pwsh
+        run: ./tools/Stage-Notices.ps1
       - name: Find installer compiler
         id: inno
         shell: pwsh
@@ -63,6 +66,13 @@ jobs:
             installer-output/build-receipt.json
           if-no-files-found: error
           retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AuroraWallpaper-third-party-sources
+          path: third-party-sources/
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
       - name: Keep installer test logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -84,6 +94,10 @@ jobs:
         with:
           name: AuroraWallpaper-Setup-windows-x64
           path: release-files
+      - uses: actions/download-artifact@v4
+        with:
+          name: AuroraWallpaper-third-party-sources
+          path: release-files/dependency-sources
       - name: Publish tested installer
         env:
           GH_TOKEN: ${{ github.token }}
@@ -92,8 +106,8 @@ jobs:
           test -n "$version"
           tag="v$version"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" release-files/* --clobber
+            gh release upload "$tag" release-files/*.exe release-files/*.sha256 release-files/*.json release-files/dependency-sources/* --clobber
             gh release edit "$tag" --notes-file docs/RELEASE_NOTES.md
           else
-            gh release create "$tag" release-files/* --target "$GITHUB_SHA" --title "Aurora Wallpaper $version — Windows preview" --notes-file docs/RELEASE_NOTES.md --prerelease
+            gh release create "$tag" release-files/*.exe release-files/*.sha256 release-files/*.json release-files/dependency-sources/* --target "$GITHUB_SHA" --title "Aurora Wallpaper $version — Windows preview" --notes-file docs/RELEASE_NOTES.md --prerelease
           fi

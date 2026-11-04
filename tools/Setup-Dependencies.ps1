@@ -11,6 +11,7 @@ New-Item -ItemType Directory -Force $cacheRoot | Out-Null
 function Download-File([string]$Url, [string]$Destination) {
     if (!(Test-Path $Destination)) {
         $partial = "$Destination.partial"
+        Write-Host "Downloading $Url"
         Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $partial
         Move-Item -Force $partial $Destination
     }
@@ -22,16 +23,13 @@ $webVersion = '1.0.4314.35'
 $webName = "microsoft.web.webview2.$webVersion.nupkg"
 $webBase = "https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/$webVersion/$webName"
 $webArchive = Join-Path $cacheRoot "WebView2-$webVersion.zip"
-$webHashFile = Join-Path $cacheRoot "WebView2-$webVersion.sha512"
 Download-File $webBase $webArchive
-Download-File "$webBase.sha512" $webHashFile
-$sha512 = [System.Security.Cryptography.SHA512]::Create()
-try {
-    $stream = [System.IO.File]::OpenRead($webArchive)
-    try { $webActual = [Convert]::ToBase64String($sha512.ComputeHash($stream)) } finally { $stream.Dispose() }
-} finally { $sha512.Dispose() }
-$webExpected = (Get-Content -Raw $webHashFile).Trim()
-if ($webActual -ne $webExpected) { throw 'WebView2 SHA-512 mismatch; delete third_party/downloads and retry.' }
+# NuGet's flat-container service does not expose .nupkg.sha512 sidecar files.
+# Verify the signed package using NuGet's certificate-chain verification instead.
+$verifyPackage = Join-Path $cacheRoot $webName
+Copy-Item -Force $webArchive $verifyPackage
+nuget verify -Signatures $verifyPackage -NonInteractive
+if ($LASTEXITCODE) { throw 'WebView2 NuGet signature verification failed.' }
 $webRoot = Join-Path $dependencyRoot 'WebView2'
 if (Test-Path $webRoot) { Remove-Item -Recurse -Force $webRoot }
 Expand-Archive -Path $webArchive -DestinationPath $webRoot
@@ -59,4 +57,4 @@ Copy-Item -Recurse (Join-Path $source 'plugins') $vlcRoot
 Get-ChildItem $source -File | Where-Object { $_.Name -match '^(COPYING|AUTHORS|THANKS|README)' } | Copy-Item -Destination $vlcRoot
 Remove-Item -Recurse -Force $extracted
 Write-Host "Dependencies ready: WebView2 SDK $webVersion; libVLC $vlcVersion x64."
-Write-Host 'Install the Microsoft WebView2 Evergreen Runtime separately if it is not already present.'
+Write-Host 'The setup wizard supplies the WebView2 Runtime automatically.'
