@@ -24,7 +24,21 @@ try {
     Run-Checked $Installer "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /TASKS=`"`" /DIR=`"$testRoot`" /LOG=`"$installLog`"" 600
     $application = Join-Path $testRoot 'bin/AuroraWallpaper.exe'
     if (!(Test-Path $application)) { throw 'Installer did not install the application.' }
-    Run-Checked $application '--smoke-test' 45
+    # Do not let the build machine's Qt installation hide missing deployed DLLs
+    # or plugins. This process must load the installed application's own files.
+    $originalPath = $env:PATH
+    $originalQtPlugins = $env:QT_PLUGIN_PATH
+    $originalQpaPlugins = $env:QT_QPA_PLATFORM_PLUGIN_PATH
+    try {
+        $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+        $env:QT_PLUGIN_PATH = $null
+        $env:QT_QPA_PLATFORM_PLUGIN_PATH = $null
+        Run-Checked $application '--smoke-test' 45
+    } finally {
+        $env:PATH = $originalPath
+        $env:QT_PLUGIN_PATH = $originalQtPlugins
+        $env:QT_QPA_PLATFORM_PLUGIN_PATH = $originalQpaPlugins
+    }
     Write-Host 'Installed app loaded Qt, WebView2, libVLC, and compiled the bundled HLSL sample.'
     $uninstaller = Join-Path $testRoot 'unins000.exe'
     if (!(Test-Path $uninstaller)) { throw 'Uninstaller is missing.' }

@@ -100,7 +100,7 @@ bool onBattery() {
 namespace {
 bool sessionLocked() {
     LPWSTR buffer{}; DWORD size{}; bool locked=false;
-    if (WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE,WTS_CURRENT_SESSION,WTSInfoEx,&buffer,&size)) {
+    if (WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE,WTS_CURRENT_SESSION,WTSSessionInfoEx,&buffer,&size)) {
         if (size>=sizeof(WTSINFOEXW)) {
             auto info=reinterpret_cast<WTSINFOEXW*>(buffer);
             if (info->Level==1) locked=info->Data.WTSInfoExLevel1.SessionFlags==WTS_SESSIONSTATE_LOCK;
