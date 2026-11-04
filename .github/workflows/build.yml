@@ -106,8 +106,7 @@ jobs:
           test -n "$version"
           tag="v$version"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" release-files/*.exe release-files/*.sha256 release-files/*.json release-files/dependency-sources/* --clobber
-            gh release edit "$tag" --notes-file docs/RELEASE_NOTES.md
+            echo "Release $tag already exists; leaving its tested assets unchanged. Bump the application version for a new release."
           else
             gh release create "$tag" release-files/*.exe release-files/*.sha256 release-files/*.json release-files/dependency-sources/* --target "$GITHUB_SHA" --title "Aurora Wallpaper $version — Windows preview" --notes-file docs/RELEASE_NOTES.md --prerelease
           fi
